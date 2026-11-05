@@ -2,11 +2,11 @@
   "schema_version": 1,
   "plugins": [
     {
-      "id": "zcode",
+      "id": "zcode-oauth",
       "name": "ZCode / GLM Coding Plan",
       "description": "Adds ZCode / GLM Coding Plan as a CLIProxyAPI provider with relay (OAuth), ultra and bigmodel_direct upstreams. Auto mode prefers the relay trial plan, routes only the models it covers, caps relay concurrency at 1 and sends overflow straight to the normal channel. Ships an embedded usage dashboard.",
       "author": "colemak",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "repository": "https://github.com/wzacolemak/cpa-plugin-zcode-oauth",
       "logo": "https://chat.z.ai/favicon.ico",
       "homepage": "https://github.com/wzacolemak/cpa-plugin-zcode-oauth",

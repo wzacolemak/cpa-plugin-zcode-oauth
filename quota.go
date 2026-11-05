@@ -72,7 +72,7 @@ type quotaLimitResp struct {
 }
 
 type customerResp struct {
-	Code int    `json:"code"`
+	Code int `json:"code"`
 	Data struct {
 		CustomerName string `json:"customerName"`
 		PhoneNumber  string `json:"phoneNumber"`

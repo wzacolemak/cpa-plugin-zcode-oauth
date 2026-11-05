@@ -35,8 +35,8 @@ type resetStatusResp struct {
 	Code int    `json:"code"`
 	Msg  string `json:"msg"`
 	Data struct {
-		AvailableFiveHourResets []resetCardRef `json:"available_five_hour_resets"`
-		AvailableWeekResets     []resetCardRef `json:"available_week_resets"`
+		AvailableFiveHourResets    []resetCardRef `json:"available_five_hour_resets"`
+		AvailableWeekResets        []resetCardRef `json:"available_week_resets"`
 		LatestFiveHourResetHistory struct {
 			UsedAt int64 `json:"used_at"`
 		} `json:"latest_five_hour_reset_history"`

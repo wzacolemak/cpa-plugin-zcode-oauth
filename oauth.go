@@ -129,10 +129,10 @@ func startPollFlow() (*loginFlow, error) {
 		Code int    `json:"code"`
 		Msg  string `json:"msg"`
 		Data struct {
-			FlowID         string  `json:"flow_id"`
-			AuthorizeURL   string  `json:"authorize_url"`
-			ExpiresAt      float64 `json:"expires_at"`
-			PollIntervalSec int    `json:"poll_interval_sec"`
+			FlowID          string  `json:"flow_id"`
+			AuthorizeURL    string  `json:"authorize_url"`
+			ExpiresAt       float64 `json:"expires_at"`
+			PollIntervalSec int     `json:"poll_interval_sec"`
 		} `json:"data"`
 	}
 	if err := json.Unmarshal(raw, &env); err != nil {
@@ -215,12 +215,12 @@ func pollOnce() (string, *credential, error) {
 		return "failed", nil, fmt.Errorf("poll decode: %w", err)
 	}
 	var detail struct {
-		Status   string `json:"status"`
-		Token    string `json:"token"`
-		User     struct {
-			UserID   string `json:"user_id"`
-			Name     string `json:"name"`
-			Email    string `json:"email"`
+		Status string `json:"status"`
+		Token  string `json:"token"`
+		User   struct {
+			UserID string `json:"user_id"`
+			Name   string `json:"name"`
+			Email  string `json:"email"`
 		} `json:"user"`
 		Bigmodel struct {
 			AccessToken  string `json:"access_token"`

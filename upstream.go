@@ -25,11 +25,12 @@ type upstreamState struct {
 }
 
 // 四种上游/套餐上下文 (与 ZCode 桌面端/官方口径一致):
-//   relay           = start plan（免费）· 体验套餐: OAuth JWT → zcode relay
-//   ultra           = Ultra 网关: 长期 CodingPlan key → zcode.z.ai/api/v1/ultra/anthropic (1.5x 额度, 扣减≈0.67x)
-//   bigmodel_direct = Bigmodel（个人）: GLM Coding Max 订阅 → open.bigmodel.cn 直连
-//   auto            = 自动: 检测到体验套餐就优先用它跑它覆盖的模型 (并发 relay_max_concurrency,
-//                     默认 1), 并发占满/套餐不可用/模型不覆盖时回落正常渠道 (ultra 或 bigmodel_direct)
+//
+//	relay           = start plan（免费）· 体验套餐: OAuth JWT → zcode relay
+//	ultra           = Ultra 网关: 长期 CodingPlan key → zcode.z.ai/api/v1/ultra/anthropic (1.5x 额度, 扣减≈0.67x)
+//	bigmodel_direct = Bigmodel（个人）: GLM Coding Max 订阅 → open.bigmodel.cn 直连
+//	auto            = 自动: 检测到体验套餐就优先用它跑它覆盖的模型 (并发 relay_max_concurrency,
+//	                  默认 1), 并发占满/套餐不可用/模型不覆盖时回落正常渠道 (ultra 或 bigmodel_direct)
 func upstreamStatusLabel(mode string) string {
 	switch mode {
 	case "bigmodel_direct":
@@ -125,10 +126,10 @@ type upstreamStatus struct {
 	FallbackMode        string       `json:"fallback_mode,omitempty"`
 	FallbackLabel       string       `json:"fallback_label,omitempty"`
 	// 路由计数 (累计): 看清 model 到底走了体验套餐还是正常渠道
-	RelayHits       int64 `json:"relay_hits"`
-	FallbackHits    int64 `json:"fallback_hits"`
-	BusyOverflow    int64 `json:"busy_overflow"`
-	RelayFailover   int64 `json:"relay_failover"`
+	RelayHits     int64 `json:"relay_hits"`
+	FallbackHits  int64 `json:"fallback_hits"`
+	BusyOverflow  int64 `json:"busy_overflow"`
+	RelayFailover int64 `json:"relay_failover"`
 }
 
 func msToCNSec(sec int64) string {
@@ -168,9 +169,9 @@ func detectRelayPlans() []relayPlanInfo {
 				StartsAt     int64  `json:"starts_at"`
 				EndsAt       int64  `json:"ends_at"`
 				Entitlements []struct {
-					ShowName    string   `json:"show_name"`
+					ShowName     string   `json:"show_name"`
 					Capabilities []string `json:"capabilities"`
-					EffectiveAt int64    `json:"effective_at"`
+					EffectiveAt  int64    `json:"effective_at"`
 				} `json:"entitlements"`
 			} `json:"plans"`
 		} `json:"data"`
@@ -339,10 +340,10 @@ func handleResourceUpstream(query url.Values, body []byte) pluginapi.ManagementR
 // trialStatus 是 relay(体验套餐) 的可用性快照, 决定 auto 模式能不能走 relay
 // 以及哪些模型应该走 relay。
 type trialStatus struct {
-	Available bool      `json:"available"`
-	Reason    string    `json:"reason,omitempty"`
-	Plans     []string  `json:"plans,omitempty"`
-	Models    []string  `json:"models,omitempty"`
+	Available bool     `json:"available"`
+	Reason    string   `json:"reason,omitempty"`
+	Plans     []string `json:"plans,omitempty"`
+	Models    []string `json:"models,omitempty"`
 	// DefaultModels 表示套餐未下发模型清单, 按默认规则 (仅 GLM 系列) 判定覆盖
 	DefaultModels bool      `json:"default_models,omitempty"`
 	CheckedAt     time.Time `json:"checked_at"`
@@ -576,9 +577,10 @@ func trialCoversModel(status trialStatus, model string) bool {
 }
 
 // normalizeModelName 把上游下发的 capability / 模型名归一到可比较形式:
-//   "model:glm-5.3-flash" -> "glm-5.3-flash"
-//   "bigmodel/GLM-5.3"    -> "glm-5.3"
-//   "GLM-5.3-Flash"       -> "glm-5.3-flash"
+//
+//	"model:glm-5.3-flash" -> "glm-5.3-flash"
+//	"bigmodel/GLM-5.3"    -> "glm-5.3"
+//	"GLM-5.3-Flash"       -> "glm-5.3-flash"
 func normalizeModelName(model string) string {
 	value := strings.ToLower(strings.TrimSpace(model))
 	// 去掉 provider 前缀 (a/b -> b)

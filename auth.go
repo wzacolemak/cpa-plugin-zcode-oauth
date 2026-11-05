@@ -8,8 +8,8 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/pluginapi"
 )
 
-const authRecordID = "zcode-bigmodel"
-const authFileName = "zcode.json"
+const authRecordID = "zcode-oauth-bigmodel"
+const authFileName = "zcode-oauth.json"
 
 // handleAuthIdentifier: auth.identifier
 func handleAuthIdentifier() ([]byte, error) {
@@ -34,11 +34,10 @@ func handleAuthParse(raw []byte) ([]byte, error) {
 
 func authDataFrom(cred credential) pluginapi.AuthData {
 	return pluginapi.AuthData{
-		Provider:     pluginID,
-		ID:           authRecordID,
-		FileName:     authFileName,
-		Label:        "ZCode bigmodel 编程套餐",
-		StorageJSON:  mustJSON(cred),
+		Provider: pluginID,
+		ID:       authRecordID,
+		FileName: authFileName,
+		Label:    "ZCode bigmodel 编程套餐", StorageJSON: mustJSON(cred),
 		NextRefreshAfter: time.Now().Add(30 * time.Minute),
 	}
 }

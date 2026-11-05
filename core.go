@@ -15,9 +15,10 @@ import (
 )
 
 var (
-	pluginVersion = "0.2.0"
-	pluginID      = "zcode"
-	activeConfig  atomic.Value
+	pluginVersion = "0.2.1"
+	// pluginID 是 CPA 内部的 provider 名, 必须全局唯一 (官方商店已有 id=zcode 的插件)
+	pluginID     = "zcode-oauth"
+	activeConfig atomic.Value
 )
 
 const (
@@ -149,17 +150,17 @@ func defaultConfig() pluginConfig {
 			"flashx": "glm-5.3-flashx",
 			"5.2":    "glm-5.2",
 			"5.1":    "glm-5.1",
-			"5":       "glm-5",
+			"5":      "glm-5",
 		},
-		TimeoutSecs:         300,
-		DataDir:             "plugins/zcode-oauth-data",
-		UpstreamMode:        "relay",
-		AutoFallbackMode:    "ultra",
-		RelayMaxConcurrency: 1,
+		TimeoutSecs:          300,
+		DataDir:              "plugins/zcode-oauth-data",
+		UpstreamMode:         "relay",
+		AutoFallbackMode:     "ultra",
+		RelayMaxConcurrency:  1,
 		PlanDetectTTLSeconds: 300,
-		TrialModels:         []string{"glm-5.3", "glm-5.3-flash"},
-		BigmodelDirectURL:   defaultBigmodelDirect,
-		UltraBaseURL:        defaultUltraBaseURL,
+		TrialModels:          []string{"glm-5.3", "glm-5.3-flash"},
+		BigmodelDirectURL:    defaultBigmodelDirect,
+		UltraBaseURL:         defaultUltraBaseURL,
 	}
 }
 
@@ -391,7 +392,10 @@ func managementRoutes() pluginapi.ManagementRegistrationResponse {
 			{Method: http.MethodGet, Path: "zcode-oauth/status", Description: "Login status"},
 			{Method: http.MethodPost, Path: "zcode-oauth/logout", Description: "Drop stored credential"},
 			{Method: http.MethodPost, Path: "zcode-oauth/refresh", Description: "Force token refresh"},
-			{Method: http.MethodPost, Path: "zcode/reset", Description: "Consume a reset card (JSON, management-authenticated)"},
+			{Method: http.MethodPost, Path: "zcode-oauth/reset", Description: "Consume a reset card (JSON, management-authenticated)"},
+			// 兼容旧路径: 插件 ID 从 zcode 改名为 zcode-oauth, 已部署的调用方 (如 Usage Keeper)
+			// 仍在用 /v0/management/zcode/reset, 保留别名避免它们跟着改
+			{Method: http.MethodPost, Path: "zcode/reset", Description: "Legacy alias of zcode-oauth/reset"},
 		},
 		Resources: []pluginapi.ResourceRoute{
 			{Path: "login", Description: "ZCode OAuth login (unauthenticated)"},
@@ -412,9 +416,10 @@ func handleManagement(raw []byte) ([]byte, error) {
 		}
 	}
 	switch {
-	case strings.HasSuffix(req.Path, "/management/zcode/reset"):
+	case strings.HasSuffix(req.Path, "/management/zcode-oauth/reset"), strings.HasSuffix(req.Path, "/management/zcode/reset"):
 		// 管理路由 (带管理密钥), 供 usage keeper 程序化调用;
-		// 后缀必须带 management/ 前缀, 否则会把 resource 的 /zcode/reset 确认页也匹配进来
+		// 后缀必须带 management/ 前缀, 否则会把 resource 的 /reset 确认页也匹配进来。
+		// /management/zcode/reset 是改名前的中路径, 作为别名继续保留。
 		resp := handleManagementZcodeReset(req.Query, req.Body)
 		return managementResponseBytes(resp)
 	case strings.HasSuffix(req.Path, "/upstream"):

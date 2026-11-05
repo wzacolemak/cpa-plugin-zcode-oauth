@@ -44,15 +44,15 @@ plugins:
     - https://raw.githubusercontent.com/wzacolemak/cpa-plugin-zcode-oauth/main/registry.json
 ```
 
-保存后到管理面板「插件商店」刷新，选中 `zcode` 安装。
+保存后到管理面板「插件商店」刷新，选中 `zcode-oauth` 安装。
 
 ### 方式二：手动放二进制
 
 从 [Releases](https://github.com/wzacolemak/cpa-plugin-zcode-oauth/releases) 下载
-`zcode_<version>_<os>_<arch>.zip`，解出的 `zcode.so` 放到：
+`zcode-oauth_<version>_<os>_<arch>.zip`，解出的 `zcode-oauth.so` 放到：
 
 ```
-<plugins.dir>/<goos>/<goarch>/zcode.so      # 例如 plugins/linux/amd64/zcode.so
+<plugins.dir>/<goos>/<goarch>/zcode-oauth.so   # 例如 plugins/linux/amd64/zcode-oauth.so
 ```
 
 重启 CPA。
@@ -75,7 +75,7 @@ make docker-build CPA_SRC=/path/to/CLIProxyAPI GOPROXY=https://goproxy.cn,direct
 ```yaml
 plugins:
   configs:
-    zcode:
+    zcode-oauth:
       enabled: true
       priority: 2
       # 本实例对外地址，用于面板里的自引用链接（登录/刷新/重置）
@@ -94,8 +94,8 @@ plugins:
       bigmodel_api_key: ""             # ultra / bigmodel_direct 用的长期 key
 ```
 
-首次使用：在管理面板 auth-files 里给 `zcode` 添加凭据，或直接访问
-`<public_base>/v0/resource/plugins/zcode/login` 完成 bigmodel 授权。
+首次使用：在管理面板 auth-files 里给 `zcode-oauth` 添加凭据，或直接访问
+`<public_base>/v0/resource/plugins/zcode-oauth/login` 完成 bigmodel 授权。
 
 ## 安全说明
 
@@ -103,6 +103,10 @@ plugins:
   已被 `.gitignore` 排除
 - 构建产物（`*.so` / `*.h`）、本机部署脚本、`auths/`、`logs/` 同样不入库
 - 插件只是用你自己的账号发请求，不上报任何数据
+- 插件 ID 为 `zcode-oauth`（早期版本叫 `zcode`）：用旧 ID 部署过的话，改名后需把配置键
+  `plugins.configs.zcode` 改成 `plugins.configs.zcode-oauth`，并把 auth 文件里的
+  `"type": "zcode"` 改成 `"type": "zcode-oauth"`；管理路由 `/v0/management/zcode/reset`
+  作为别名继续可用
 
 ## 已知限制
 

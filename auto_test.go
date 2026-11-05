@@ -390,13 +390,13 @@ func newAutoTestEnv(t *testing.T) (relayStub, ultraStub *stubUpstream, cfg plugi
 
 	dir := t.TempDir()
 	cfg = normalizeConfig(pluginConfig{
-		UpstreamMode:        "auto",
-		AutoFallbackMode:    "ultra",
-		DataDir:             dir,
-		PlanBaseURL:         relayStub.srv.URL + "/anthropic",
-		UltraBaseURL:        ultraStub.srv.URL + "/ultra",
-		BigmodelAPIKey:      "sk-test-key",
-		RelayMaxConcurrency: 1,
+		UpstreamMode:         "auto",
+		AutoFallbackMode:     "ultra",
+		DataDir:              dir,
+		PlanBaseURL:          relayStub.srv.URL + "/anthropic",
+		UltraBaseURL:         ultraStub.srv.URL + "/ultra",
+		BigmodelAPIKey:       "sk-test-key",
+		RelayMaxConcurrency:  1,
 		PlanDetectTTLSeconds: 300,
 	})
 	activeConfig.Store(cfg)

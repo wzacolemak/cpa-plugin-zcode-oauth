@@ -1,4 +1,4 @@
-PLUGIN_ID    ?= zcode
+PLUGIN_ID    ?= zcode-oauth
 PLUGIN_NAME  ?= $(PLUGIN_ID)
 VERSION      ?= $(shell sed -n 's/.*pluginVersion = "\(.*\)"/\1/p' core.go | head -1)
 BUILD_DIR    ?= dist

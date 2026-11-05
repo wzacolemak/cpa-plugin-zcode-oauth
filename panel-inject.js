@@ -1,7 +1,7 @@
       (() => {
         const modalID = 'zcode-upstream-modal';
         const linkClass = 'zcode-upstream-open';
-        const switchEndpoint = '/v0/resource/plugins/zcode/upstream';
+        const switchEndpoint = '/v0/resource/plugins/zcode-oauth/upstream';
 
         const style = document.createElement('style');
         style.textContent = `
@@ -38,8 +38,10 @@
         function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
         function findFileNameSpan() {
+          // 插件 ID 从 zcode 改名为 zcode-oauth：新旧凭据文件名都要能当锚点
+          const names = ['zcode-oauth.json', 'zcode.json'];
           return [...document.querySelectorAll('span[class*="fileName"]')].find(el =>
-            el.textContent.trim() === "zcode.json");
+            names.includes(el.textContent.trim()));
         }
 
         function ensureLink() {
