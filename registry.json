@@ -1,25 +1,23 @@
 {
-  "schema_version": 2,
+  "schema_version": 1,
   "plugins": [
     {
       "id": "zcode",
       "name": "ZCode / GLM Coding Plan",
-      "description": "把 GLM Coding Plan / ZCode 账号接成 CPA provider：relay / ultra / bigmodel_direct 三种上游，auto 模式优先体验套餐（并发 1，超出回落正常渠道），内置用量看板。",
+      "description": "Adds ZCode / GLM Coding Plan as a CLIProxyAPI provider with relay (OAuth), ultra and bigmodel_direct upstreams. Auto mode prefers the relay trial plan, routes only the models it covers, caps relay concurrency at 1 and sends overflow straight to the normal channel. Ships an embedded usage dashboard.",
       "author": "colemak",
       "version": "0.2.0",
-      "repository": "wzacolemak/cpa-plugin-zcode-oauth",
-      "homepage": "https://github.com/wzacolemak/cpa-plugin-zcode-oauth",
+      "repository": "https://github.com/wzacolemak/cpa-plugin-zcode-oauth",
       "logo": "https://chat.z.ai/favicon.ico",
+      "homepage": "https://github.com/wzacolemak/cpa-plugin-zcode-oauth",
       "license": "MIT",
       "tags": [
-        "provider",
-        "glm",
-        "zcode",
-        "bigmodel",
-        "coding-plan"
+        "Provider"
       ],
-      "install": {
-        "type": "github-release"
+      "locales": {
+        "zh-CN": {
+          "description": "把 ZCode / GLM Coding Plan 账号接成 CLIProxyAPI provider：支持 relay（OAuth）、ultra、bigmodel_direct 三种上游。auto 模式优先体验套餐，只把套餐覆盖的模型路由到 relay，并发上限 1，超出立刻回落正常渠道；内置用量看板。"
+        }
       }
     }
   ]
