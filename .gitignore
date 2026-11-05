@@ -1,0 +1,26 @@
+# 构建产物
+*.so
+*.dylib
+*.dll
+*.h
+dist/
+
+# 运行期数据 (含凭据, 绝对不能入库)
+plugins/
+**/credential.json
+**/upstream.json
+**/*.db
+**/*.db-*
+logs/
+auths/
+
+# 本地部署/发布脚本 (含本机路径与 sudo 密码)
+rename-deploy.py
+build-composite.py
+build-composite2.py
+install-panel.py
+test-deploy/
+
+# 编辑器
+.DS_Store
+*.swp

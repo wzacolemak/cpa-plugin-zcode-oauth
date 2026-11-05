@@ -1,0 +1,26 @@
+{
+  "schema_version": 2,
+  "plugins": [
+    {
+      "id": "zcode",
+      "name": "ZCode / GLM Coding Plan",
+      "description": "把 GLM Coding Plan / ZCode 账号接成 CPA provider：relay / ultra / bigmodel_direct 三种上游，auto 模式优先体验套餐（并发 1，超出回落正常渠道），内置用量看板。",
+      "author": "colemak",
+      "version": "0.2.0",
+      "repository": "wzacolemak/cpa-plugin-zcode-oauth",
+      "homepage": "https://github.com/wzacolemak/cpa-plugin-zcode-oauth",
+      "logo": "https://chat.z.ai/favicon.ico",
+      "license": "MIT",
+      "tags": [
+        "provider",
+        "glm",
+        "zcode",
+        "bigmodel",
+        "coding-plan"
+      ],
+      "install": {
+        "type": "github-release"
+      }
+    }
+  ]
+}

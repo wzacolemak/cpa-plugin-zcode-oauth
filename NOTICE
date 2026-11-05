@@ -1,0 +1,4 @@
+本项目的面板注入方式、ZCode 客户端请求字段（User-Agent / X-App-Id / X-Platform 等）
+参考了 https://github.com/shizukugo/cpa-plugin-zcode （MIT License, Copyright (c) 2026 rensumo）。
+
+本项目为独立实现：网络协议实现、体验套餐检测与自动调度、用量面板数据流均自行编写。
