@@ -5,7 +5,7 @@ BUILD_DIR    ?= dist
 GOOS         ?= linux
 GOARCH       ?= amd64
 CPA_SRC      ?= /cpa-src
-GO_IMAGE     ?= golang:1.26-bookworm
+GO_IMAGE     ?= golang:1.26.10-bookworm
 
 EXT_linux   = so
 EXT_freebsd = so
@@ -27,6 +27,9 @@ DOCKER_RUN = docker run --rm \
 	-v $(abspath $(CPA_SRC)):/cpa-src:ro -v $(CURDIR):/src -w /src $(GO_IMAGE)
 
 .PHONY: build docker-build test docker-test vet clean package checksums release-assets
+
+# 打包时用哪个构建目标: 本机工具链满足 go.mod 就用 build, 否则 make package BUILD=docker-build
+BUILD ?= build
 
 build:
 	mkdir -p $(BUILD_DIR)
@@ -52,7 +55,7 @@ clean:
 
 # CPA 插件商店要求的 release 资产: <id>_<version>_<goos>_<goarch>.zip
 # zip 内必须是 <id>.so (或 <id>-v<version>.so), 商店安装时按此查找。
-package: build
+package: $(BUILD)
 	rm -rf $(BUILD_DIR)/stage $(ARCHIVE_PATH)
 	mkdir -p $(BUILD_DIR)/stage
 	cp $(PLUGIN_OUTPUT) $(BUILD_DIR)/stage/$(PLUGIN_ID).$(PLUGIN_EXT)
