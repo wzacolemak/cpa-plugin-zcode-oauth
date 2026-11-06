@@ -305,7 +305,8 @@ func executeRelay(req *pluginapi.ExecutorRequest, cfg pluginConfig) (*pluginapi.
 		return nil, pluginabi.NewError("no_credential", "not logged in; open the plugin login resource page first", http.StatusUnauthorized)
 	}
 	model := mappedModel(req.Model, cfg)
-	payload := rewriteModel(req.Payload, model)
+	// 必须注入官方 system 指纹块, 否则网关风控直接 3012 (见 zcode_prompt.go)
+	payload := injectOfficialSystem(rewriteModel(req.Payload, model))
 	endpoint := cfg.PlanBaseURL + "/v1/messages"
 
 	client := &http.Client{Timeout: time.Duration(cfg.TimeoutSecs) * time.Second}
@@ -332,7 +333,9 @@ func executeRelay(req *pluginapi.ExecutorRequest, cfg pluginConfig) (*pluginapi.
 		httpReq.Header.Set("Authorization", "Bearer "+cred.AccessToken)
 		httpReq.Header.Set("Content-Type", "application/json")
 		httpReq.Header.Set("anthropic-version", "2023-06-01")
-		httpReq.Header.Set("User-Agent", "Zcode/"+cfg.AppVersion)
+		// UA 前缀大小写敏感, 且版本需 >= 3.17, 否则风控 3012
+		httpReq.Header.Set("User-Agent", "ZCode/"+cfg.AppVersion)
+		httpReq.Header.Set("X-ZCode-App-Version", cfg.AppVersion)
 		httpReq.Header.Set("X-Platform", "win32-x64")
 		httpReq.Header.Set("X-App-Id", cfg.AppID)
 

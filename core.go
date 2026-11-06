@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	pluginVersion = "0.2.1"
+	pluginVersion = "0.2.2"
 	// pluginID 是 CPA 内部的 provider 名, 必须全局唯一 (官方商店已有 id=zcode 的插件)
 	pluginID     = "zcode-oauth"
 	activeConfig atomic.Value
@@ -30,7 +30,8 @@ const (
 	defaultUltraBaseURL   = "https://zcode.z.ai/api/v1/ultra/anthropic"
 	defaultAppID          = "zcode"
 	defaultProvider       = "bigmodel"
-	defaultAppVersion     = "3.14.4"
+	// defaultAppVersion 必须 >= 3.17: 更低的 UA 版本会被 zcode-plan 风控 3012 拦截
+	defaultAppVersion = "3.17.2"
 	// defaultPublicBase 故意留空: 本实例对外地址因人而异, 由配置 public_base 指定;
 	// 为空时页面里的自引用链接退化为相对路径 (浏览器仍可用)。
 	defaultPublicBase = ""
