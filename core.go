@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	pluginVersion = "0.2.2"
+	pluginVersion = "0.2.3"
 	// pluginID 是 CPA 内部的 provider 名, 必须全局唯一 (官方商店已有 id=zcode 的插件)
 	pluginID     = "zcode-oauth"
 	activeConfig atomic.Value
@@ -98,18 +98,30 @@ type managementRegisterRequest struct {
 }
 
 type pluginConfig struct {
-	Provider     string            `yaml:"provider"`
-	TokenURL     string            `yaml:"token_url"`
-	AuthorizeURL string            `yaml:"authorize_url"`
-	RelayBase    string            `yaml:"relay_base"`
-	AppID        string            `yaml:"app_id"`
-	PublicBase   string            `yaml:"public_base"`
-	PlanBaseURL  string            `yaml:"plan_base_url"`
-	AppVersion   string            `yaml:"app_version"`
-	Models       []string          `yaml:"models"`
-	ModelMap     map[string]string `yaml:"model_map"`
-	TimeoutSecs  int               `yaml:"timeout_seconds"`
-	DataDir      string            `yaml:"data_dir"`
+	Provider     string `yaml:"provider"`
+	TokenURL     string `yaml:"token_url"`
+	AuthorizeURL string `yaml:"authorize_url"`
+	RelayBase    string `yaml:"relay_base"`
+	AppID        string `yaml:"app_id"`
+	PublicBase   string `yaml:"public_base"`
+	PlanBaseURL  string `yaml:"plan_base_url"`
+	AppVersion   string `yaml:"app_version"`
+	// VersionSource 决定 ZCode 客户端版本来源: static(只用 app_version) |
+	// local(读本机 ZCode 桌面端 rollout 日志) | remote(读官网发版页) |
+	// auto(先 local 后 remote)。默认 auto: 官方抬高 UA 版本底线时无需改配置。
+	VersionSource string `yaml:"version_source"`
+	// VersionCheckURL 是 remote 源的发版页地址, 从 releases/<semver>/ 链接里取最大版本。
+	VersionCheckURL string `yaml:"version_check_url"`
+	// VersionRefreshSecs 是动态版本缓存秒数; <=0 取 3600。
+	VersionRefreshSecs int `yaml:"version_refresh_seconds"`
+	// AppVersionFloor 是版本下限: 低于它的 UA 会被 zcode-plan 风控 3012 拦截。
+	AppVersionFloor string `yaml:"app_version_floor"`
+	// VersionLocalPaths 是额外的本地 rollout 目录; 默认已包含 ~/.zcode/cli/rollout。
+	VersionLocalPaths []string          `yaml:"version_local_paths"`
+	Models            []string          `yaml:"models"`
+	ModelMap          map[string]string `yaml:"model_map"`
+	TimeoutSecs       int               `yaml:"timeout_seconds"`
+	DataDir           string            `yaml:"data_dir"`
 	// UpstreamMode: relay (zcode 中转/体验套餐, OAuth JWT) | ultra (长期 key 走 ultra 网关)
 	// | bigmodel_direct (Coding Max key 直连 open.bigmodel.cn)
 	// | auto (优先体验套餐 relay, 并发占满/不可用时回落正常渠道)
@@ -137,15 +149,19 @@ type pluginConfig struct {
 
 func defaultConfig() pluginConfig {
 	return pluginConfig{
-		Provider:     defaultProvider,
-		TokenURL:     defaultTokenURL,
-		AuthorizeURL: defaultAuthorize,
-		RelayBase:    defaultRelayBase,
-		AppID:        defaultAppID,
-		PublicBase:   defaultPublicBase,
-		PlanBaseURL:  defaultPlanBaseURL,
-		AppVersion:   defaultAppVersion,
-		Models:       []string{"glm-5.3", "glm-5.3-flash", "glm-5.3-flashx", "glm-5.2", "glm-5.1", "glm-5", "flash", "flashx", "5.2", "5.1", "5", "GLM-5.3", "GLM-5.3-Flash"},
+		Provider:           defaultProvider,
+		TokenURL:           defaultTokenURL,
+		AuthorizeURL:       defaultAuthorize,
+		RelayBase:          defaultRelayBase,
+		AppID:              defaultAppID,
+		PublicBase:         defaultPublicBase,
+		PlanBaseURL:        defaultPlanBaseURL,
+		AppVersion:         defaultAppVersion,
+		VersionSource:      versionSourceAuto,
+		VersionCheckURL:    defaultVersionCheckURL,
+		VersionRefreshSecs: defaultVersionRefreshSecs,
+		AppVersionFloor:    defaultAppVersionFloor,
+		Models:             []string{"glm-5.3", "glm-5.3-flash", "glm-5.3-flashx", "glm-5.2", "glm-5.1", "glm-5", "flash", "flashx", "5.2", "5.1", "5", "GLM-5.3", "GLM-5.3-Flash"},
 		ModelMap: map[string]string{
 			"flash":  "glm-5.3-flash",
 			"flashx": "glm-5.3-flashx",
@@ -198,6 +214,15 @@ func mergeConfig(base, override pluginConfig) pluginConfig {
 	setStr(&base.PublicBase, override.PublicBase)
 	setStr(&base.PlanBaseURL, override.PlanBaseURL)
 	setStr(&base.AppVersion, override.AppVersion)
+	setStr(&base.VersionSource, override.VersionSource)
+	setStr(&base.VersionCheckURL, override.VersionCheckURL)
+	setStr(&base.AppVersionFloor, override.AppVersionFloor)
+	if override.VersionRefreshSecs > 0 {
+		base.VersionRefreshSecs = override.VersionRefreshSecs
+	}
+	if len(override.VersionLocalPaths) > 0 {
+		base.VersionLocalPaths = override.VersionLocalPaths
+	}
 	setStr(&base.DataDir, override.DataDir)
 	setStr(&base.UpstreamMode, override.UpstreamMode)
 	setStr(&base.AutoFallbackMode, override.AutoFallbackMode)
@@ -243,6 +268,23 @@ func normalizeConfig(cfg pluginConfig) pluginConfig {
 	}
 	if cfg.TimeoutSecs <= 0 {
 		cfg.TimeoutSecs = 300
+	}
+	switch strings.ToLower(strings.TrimSpace(cfg.VersionSource)) {
+	case versionSourceLocal, versionSourceRemote, versionSourceAuto:
+		cfg.VersionSource = strings.ToLower(strings.TrimSpace(cfg.VersionSource))
+	default:
+		cfg.VersionSource = versionSourceStatic
+	}
+	cfg.VersionCheckURL = strings.TrimSpace(cfg.VersionCheckURL)
+	if cfg.VersionCheckURL == "" {
+		cfg.VersionCheckURL = defaultVersionCheckURL
+	}
+	if cfg.VersionRefreshSecs <= 0 {
+		cfg.VersionRefreshSecs = defaultVersionRefreshSecs
+	}
+	cfg.AppVersionFloor = strings.TrimSpace(cfg.AppVersionFloor)
+	if cfg.AppVersionFloor == "" {
+		cfg.AppVersionFloor = defaultAppVersionFloor
 	}
 	if len(cfg.Models) == 0 {
 		cfg.Models = defaultConfig().Models
@@ -331,6 +373,11 @@ func pluginRegistration() registration {
 				{Name: "model_map", Type: pluginapi.ConfigFieldTypeObject, Description: "Requested model to upstream model mapping."},
 				{Name: "timeout_seconds", Type: pluginapi.ConfigFieldTypeInteger, Description: "Upstream request timeout in seconds."},
 				{Name: "data_dir", Type: pluginapi.ConfigFieldTypeString, Description: "Directory (relative to CPA working dir) for the OAuth credential file."},
+				{Name: "version_source", Type: pluginapi.ConfigFieldTypeString, Description: "ZCode client version source: static | local | remote | auto (default auto). local reads this machine's ZCode rollout logs, remote reads the release page. Keeps User-Agent ZCode/<semver> current so the trial plan keeps working."},
+				{Name: "version_check_url", Type: pluginapi.ConfigFieldTypeString, Description: "Release page scraped by the remote version source (default https://zcode.z.ai/cn)."},
+				{Name: "version_refresh_seconds", Type: pluginapi.ConfigFieldTypeInteger, Description: "How long a dynamically resolved client version is cached (default 3600)."},
+				{Name: "app_version_floor", Type: pluginapi.ConfigFieldTypeString, Description: "Lowest client version ever sent. Older versions are rejected by the plan gateway with code 3012 (default 3.17.0)."},
+				{Name: "version_local_paths", Type: pluginapi.ConfigFieldTypeArray, Description: "Extra directories scanned for ZCode rollout logs; ~/.zcode/cli/rollout is always scanned."},
 				{Name: "upstream_mode", Type: pluginapi.ConfigFieldTypeString, Description: "relay | ultra | bigmodel_direct | auto. auto = prefer the relay trial plan and fall back to auto_fallback_mode."},
 				{Name: "auto_fallback_mode", Type: pluginapi.ConfigFieldTypeString, Description: "Normal channel used by auto mode when the trial plan is unavailable/busy: ultra (default) or bigmodel_direct."},
 				{Name: "relay_max_concurrency", Type: pluginapi.ConfigFieldTypeInteger, Description: "Max concurrent requests on the relay trial plan (default 1). Overflow goes straight to the fallback channel."},

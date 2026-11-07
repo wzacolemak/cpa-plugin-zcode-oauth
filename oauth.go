@@ -146,7 +146,7 @@ func startPollFlow() (*loginFlow, error) {
 	if cfg.Provider == defaultProvider {
 		// 与官方客户端一致: bigmodel 授权链接的 redirect 参数覆写为桌面中转页
 		if u, err := url.Parse(authorize); err == nil {
-			relay := cfg.RelayBase + "?redirect=" + url.QueryEscape("zcode://oauth/callback") + "&app_version=" + url.QueryEscape(cfg.AppVersion)
+			relay := cfg.RelayBase + "?redirect=" + url.QueryEscape("zcode://oauth/callback") + "&app_version=" + url.QueryEscape(appVersion(cfg))
 			q := u.Query()
 			q.Set("redirect", relay)
 			u.RawQuery = q.Encode()

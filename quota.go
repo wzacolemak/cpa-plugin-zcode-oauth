@@ -24,7 +24,7 @@ func fetchWithToken(url, token string) ([]byte, error) {
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("User-Agent", "ZCode/"+currentConfig().AppVersion)
+	req.Header.Set("User-Agent", "ZCode/"+appVersion(currentConfig()))
 	req.Header.Set("X-App-Id", "00000000")
 	client := &http.Client{Timeout: 20 * time.Second}
 	resp, err := client.Do(req)
@@ -87,7 +87,7 @@ func planAPICall(path string) ([]byte, error) {
 	if cred == nil || cred.AccessToken == "" {
 		return nil, fmt.Errorf("未登录")
 	}
-	u := planAPIBase() + path + "?app_version=" + url.QueryEscape(cfg.AppVersion) + "&platform=win32-x64"
+	u := planAPIBase() + path + "?app_version=" + url.QueryEscape(appVersion(cfg)) + "&platform=win32-x64"
 	return fetchWithToken(u, cred.AccessToken)
 }
 

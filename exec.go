@@ -333,9 +333,11 @@ func executeRelay(req *pluginapi.ExecutorRequest, cfg pluginConfig) (*pluginapi.
 		httpReq.Header.Set("Authorization", "Bearer "+cred.AccessToken)
 		httpReq.Header.Set("Content-Type", "application/json")
 		httpReq.Header.Set("anthropic-version", "2023-06-01")
-		// UA 前缀大小写敏感, 且版本需 >= 3.17, 否则风控 3012
-		httpReq.Header.Set("User-Agent", "ZCode/"+cfg.AppVersion)
-		httpReq.Header.Set("X-ZCode-App-Version", cfg.AppVersion)
+		// UA 前缀大小写敏感, 且版本需 >= 风控底线(2026-11 为 3.17), 否则 3012。
+		// 版本由 version_source 动态解析(见 version.go), 官方抬版本时无需改配置。
+		clientVersion := appVersion(cfg)
+		httpReq.Header.Set("User-Agent", "ZCode/"+clientVersion)
+		httpReq.Header.Set("X-ZCode-App-Version", clientVersion)
 		httpReq.Header.Set("X-Platform", "win32-x64")
 		httpReq.Header.Set("X-App-Id", cfg.AppID)
 

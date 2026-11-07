@@ -53,7 +53,7 @@ func fetchResetStatus() (*resetStatusResp, error) {
 		return nil, fmt.Errorf("未登录")
 	}
 	cfg := currentConfig()
-	u := "https://zcode.z.ai/api/v1/coding-plan/reset/status?app_version=" + url.QueryEscape(cfg.AppVersion) + "&platform=win32-x64"
+	u := "https://zcode.z.ai/api/v1/coding-plan/reset/status?app_version=" + url.QueryEscape(appVersion(cfg)) + "&platform=win32-x64"
 	req, err := http.NewRequest(http.MethodGet, u, nil)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func fetchResetStatus() (*resetStatusResp, error) {
 	req.Header.Set("Authorization", "Bearer "+cred.AccessToken)
 	req.Header.Set("X-Bigmodel-Authorization", "Bearer "+cred.BigmodelAccessToken)
 	req.Header.Set("Bigmodel-Target-Type", "PERSONAL")
-	req.Header.Set("User-Agent", "ZCode/"+cfg.AppVersion)
+	req.Header.Set("User-Agent", "ZCode/"+appVersion(cfg))
 	req.Header.Set("X-App-Id", "00000000")
 	client := &http.Client{Timeout: 20 * time.Second}
 	resp, err := client.Do(req)
@@ -91,7 +91,7 @@ func useResetCard(resetType string) (bool, error) {
 		"idempotency_key": hex.EncodeToString(buf),
 		"reset_type":      resetType,
 	})
-	req, err := http.NewRequest(http.MethodPost, "https://zcode.z.ai/api/v1/coding-plan/reset/use?app_version="+url.QueryEscape(currentConfig().AppVersion), strings.NewReader(string(body)))
+	req, err := http.NewRequest(http.MethodPost, "https://zcode.z.ai/api/v1/coding-plan/reset/use?app_version="+url.QueryEscape(appVersion(currentConfig())), strings.NewReader(string(body)))
 	if err != nil {
 		return false, err
 	}
@@ -99,7 +99,7 @@ func useResetCard(resetType string) (bool, error) {
 	req.Header.Set("X-Bigmodel-Authorization", "Bearer "+cred.BigmodelAccessToken)
 	req.Header.Set("Bigmodel-Target-Type", "PERSONAL")
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "ZCode/"+currentConfig().AppVersion)
+	req.Header.Set("User-Agent", "ZCode/"+appVersion(currentConfig()))
 	// 与 reset/status 调用对齐: 缺 X-App-Id/X-Platform 时上游报 3001 parameter error
 	req.Header.Set("X-App-Id", "00000000")
 	req.Header.Set("X-Platform", "win32-x64")

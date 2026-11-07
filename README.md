@@ -89,13 +89,38 @@ plugins:
       plan_detect_ttl_seconds: 300
       auto_fallback_on_error: true
       timeout_seconds: 300
-      app_version: "3.14.4"
+      app_version: "3.17.2"           # version_source=static 时使用的固定版本
+      version_source: "auto"           # static | local | remote | auto(默认)
+      version_check_url: "https://zcode.z.ai/cn"   # remote 源：官网发版页
+      version_refresh_seconds: 3600    # 动态版本缓存时长
+      app_version_floor: "3.17.0"      # 版本下限，低于它风控直接 3012
+      version_local_paths: []          # 额外扫描的本地 rollout 目录
       data_dir: "plugins/zcode-oauth-data"
       bigmodel_api_key: ""             # ultra / bigmodel_direct 用的长期 key
 ```
 
 首次使用：在管理面板 auth-files 里给 `zcode-oauth` 添加凭据，或直接访问
 `<public_base>/v0/resource/plugins/zcode-oauth/login` 完成 bigmodel 授权。
+
+### 客户端版本动态获取
+
+`User-Agent: ZCode/<semver>` 与 `X-ZCode-App-Version` 不能写成固定值：zcode-plan（体验套餐）
+风控要求 semver 不低于当前官方发行版（2026-11-07 实测为 3.17），官方每次发版几乎都会抬高这条线，
+版本一停就跟不上，表现就是 405 `{"code":3012}`。
+
+`version_source` 控制版本来源：
+
+| 取值 | 行为 |
+| --- | --- |
+| `static` | 只用 `app_version`（旧行为） |
+| `local` | 读本机 ZCode 桌面端 `~/.zcode/cli/rollout/*.jsonl` 里真实发过的 `User-Agent` |
+| `remote` | 抓官网发版页 `releases/<semver>/` 链接，取最大版本 |
+| `auto`（默认） | 两者都取，用较大值；任一失败则用另一个 |
+
+解析在后台进行（请求路径只读缓存），缓存 `version_refresh_seconds` 秒，失败后 60 秒再试；
+版本**只升不降**，且始终不低于 `app_version_floor`，所以刷新失败时退回到一个已知可用的版本，
+不会把线上打挂。注意 3.17 只是 UA 版本一条，若升级后仍 3012，说明官方还改了 system prompt 指纹，
+需要重新从 `~/.zcode/cli/rollout/model-io-sess_*.jsonl` 取样（见 `zcode_prompt.go`）。
 
 ## 安全说明
 
@@ -114,6 +139,9 @@ plugins:
   （HTTP 405 `{"code":3012,"msg":"request has been blocked due to unusual activity."}`）。
   `auto` 模式遇到这种情况会自动回落并冷却，不影响服务
 - 并发计数是进程级的：多副本 CPA 各自单独计数，上游可能看到大于 `relay_max_concurrency` 的并发
+- 版本动态获取只解决 UA 版本这一项。风控同时校验 system prompt 指纹，官方改文案后需重新取样更新
+  `zcode_prompt.go` 里的常量；`local` 源读到的是本机客户端上次运行时留下的版本，客户端长期不更新
+  时会滞后，此时靠 `remote` 或 `app_version_floor` 兜底
 
 ## 开发
 

@@ -150,7 +150,7 @@ func detectRelayPlans() []relayPlanInfo {
 		return nil
 	}
 	req.Header.Set("Authorization", "Bearer "+cred.AccessToken)
-	req.Header.Set("User-Agent", "Zcode/"+currentConfig().AppVersion)
+	req.Header.Set("User-Agent", "Zcode/"+appVersion(currentConfig()))
 	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -460,7 +460,7 @@ func fetchTrialStatus() trialStatus {
 		return trialStatus{Reason: err.Error(), CheckedAt: now}
 	}
 	req.Header.Set("Authorization", "Bearer "+cred.AccessToken)
-	req.Header.Set("User-Agent", "Zcode/"+currentConfig().AppVersion)
+	req.Header.Set("User-Agent", "Zcode/"+appVersion(currentConfig()))
 	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
